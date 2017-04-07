@@ -9,15 +9,16 @@ RUN apt-get update && apt-get install -y \
       libpng12-dev \
       libldap2-dev \
       zip \
+      python --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr --with-png-dir=/usr --with-jpeg-dir=/usr \
 	&& docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
  	&& docker-php-ext-install -j$(nproc) gd mbstring pdo_mysql zip ldap opcache
 
-RUN pecl install APCu geoip
+RUN pecl install APCu geoip-1.1.1
 
-ENV PIWIK_VERSION 3.0.0
+ENV PIWIK_VERSION 3.0.3
 
 RUN curl -fsSL -o piwik.tar.gz \
       "https://builds.piwik.org/piwik-${PIWIK_VERSION}.tar.gz" \
@@ -31,6 +32,8 @@ RUN curl -fsSL -o piwik.tar.gz \
  && rm piwik.tar.gz
 
 COPY php.ini /usr/local/etc/php/php.ini
+
+RUN echo "memory_limit=1024M" > /usr/local/etc/php/conf.d/memory-limit.ini
 
 RUN curl -fsSL -o /usr/src/piwik/misc/GeoIPCity.dat.gz http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz \
  && gunzip /usr/src/piwik/misc/GeoIPCity.dat.gz
